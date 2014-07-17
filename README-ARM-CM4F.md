@@ -22,6 +22,11 @@ Prerequisites
 Additional setup
 ----------------
 
+Make an symbolic link to make clang happy.
+
+    cd /path_to_toolchain
+    ln -s arm-none-eabi usr
+
 Put these bash scripts into your GNU tools bin folder. (Don't add .sh extension, 
 and don't forget to chmod +x)
 
