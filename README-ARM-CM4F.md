@@ -32,11 +32,22 @@ and don't forget to chmod +x)
 
 ***arm-none-eabi-clang***
 
+This script makes clang to do actual cross-compiling for Cortex-M.
+
 ```
-/path_to_llvm/bin/clang --target=armv7em-unknown-none-eabi -isysroot /path_to_toolchain $@
+/path_to_llvm/bin/clang --target=arm-none-eabi \
+-march=armv7e-m -mthumb -mfloat-abi=softfp -mfpu=fpv4-sp-d16 \
+-isysroot /path_to_toolchain $@
 ```
 
-***armv7em-unknown-none-eabi-gcc***
+***arm-none-eabi-gcc***
+
+For the script below, you first need to rename the original gcc.
+
+    cd /path_to_toolchain/bin
+    mv arm-none-eabi-gcc arm-none-eabi-gcc.real
+
+This script is to filter objc options that is passed by clang.
 
 ```
 #!/bin/bash
@@ -52,13 +63,16 @@ do
 	fi
 done
 
-arm-none-eabi-gcc --specs=rdimon.specs $NEW_ARGS
+arm-none-eabi-gcc.real $NEW_ARGS
 ```
 
 Build
 -----
 
+Before you continue, make sure that /path_to_toolchain/bin was added to PATH.
+
     ./autogen.sh
+    export LDFLAGS=--specs=rdimon.specs
     ./configure --host=arm-none-eabi --with-cm4f
     make
 
