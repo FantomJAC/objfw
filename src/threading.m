@@ -22,6 +22,8 @@
 # include "threading_pthread.m"
 #elif defined(_WIN32)
 # include "threading_winapi.m"
+#elif defined(OF_CMSIS)
+# include "threading_cmsis.m"
 #else
 # error No threads available!
 #endif

@@ -82,19 +82,22 @@ AS_IF([test x"$with_nds" = x"yes"], [
 	AC_SUBST(MAP_LDFLAGS, ['-Wl,-Map,$@.map'])
 ])
 
-AC_ARG_WITH(cm4f,
-	AS_HELP_STRING([--with-cm4f], [build for Bare-Metal ARM Cortex-M4F]))
-AS_IF([test x"$with_cm4f" = x"yes"], [
+AC_ARG_WITH(cmsis,
+	AS_HELP_STRING([--with-cmsis], [build for CMSIS]))
+AS_IF([test x"$with_cmsis" = x"yes"], [
+	AS_IF([test x"$CMSIS" = x""], [
+		AC_MSG_ERROR([CMSIS is not set! Please set CMSIS.])
+	])
 
-	OBJCFLAGS="$OBJCFLAGS -mthumb -march=armv7e-m"
-	OBJCFLAGS="$OBJCFLAGS -mfloat-abi=softfp -mfpu=fpv4-sp-d16"
+	host_os="cmsis"
+	CPPFLAGS="$CPPFLAGS -I$CMSIS/Include -I$CMSIS/RTOS"
+	enable_compiler_tls="no"
 	enable_shared="no"
-	enable_threads="no"	# TODO
 	enable_sockets="no"	# TODO
 	enable_files="no"	# TODO
 
-	AC_DEFINE(OF_CM4F, 1,
-		[Whether we are compiling for the Bare-Metal ARM Cortex-M4F])
+	AC_DEFINE(OF_CMSIS, 1,
+		[Whether we are compiling for CMSIS])
 	AC_SUBST(LIBOBJFW_TESTS, "libobjfw-tests.a")
 ], [
 	AC_SUBST(TESTS, "tests")
@@ -129,8 +132,8 @@ AX_CHECK_COMPILER_FLAGS(-Wsemicolon-before-method-body -Werror,
 AX_CHECK_COMPILER_FLAGS(-Wobjc-property-synthesis -Werror,
 	[OBJCFLAGS="$OBJCFLAGS -Wobjc-property-synthesis"])
 
-dnl We use clang integrated-as at CM4F build
-AS_IF([test x"$with_cm4f" != x"yes"], [
+dnl We use clang integrated-as at Cortex-M build
+AS_IF([test x"$with_cmsis" != x"yes"], [
 	case "$OBJC" in
 		*clang*)
 			ASFLAGS="$ASFLAGS -no-integrated-as"
@@ -551,6 +554,9 @@ AS_IF([test x"$enable_threads" != x"no"], [
 	mingw*)
 		AC_MSG_CHECKING(for threads)
 		AC_MSG_RESULT(WinAPI)
+		;;
+	cmsis)
+		AC_CHECK_HEADERS(cmsis_os.h)
 		;;
 	*)
 		ACX_PTHREAD([

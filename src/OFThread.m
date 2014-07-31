@@ -36,6 +36,7 @@
 # include <sched.h>
 #endif
 
+#import "OFString.h"
 #import "OFThread.h"
 #import "OFThread+Private.h"
 #import "OFRunLoop.h"
@@ -53,6 +54,10 @@
 # define asm __asm__
 # include <nds.h>
 # undef asm
+#endif
+
+#ifdef OF_CMSIS
+# include <cmsis_os.h>
 #endif
 
 #import "OFInitializationFailedException.h"
@@ -80,7 +85,11 @@
 static of_tlskey_t threadSelfKey;
 static OFThread *mainThread;
 
+# ifdef OF_CMSIS
+static void
+# else
 static id
+# endif
 callMain(id object)
 {
 	OFThread *thread = (OFThread*)object;
@@ -111,7 +120,9 @@ callMain(id object)
 
 	[thread release];
 
+# ifndef OF_CMSIS
 	return 0;
+# endif
 }
 #endif
 
@@ -193,6 +204,11 @@ callMain(id object)
 	counter = timeInterval * 60;
 	while (counter--)
 		swiWaitForVBlank();
+#elif defined(OF_CMSIS)
+	if (timeInterval * 1000 > UINT_MAX)
+		@throw [OFOutOfRangeException exception];
+
+	osDelay((uint32_t) (timeInterval * 1000));
 #else
 	if (timeInterval > UINT_MAX)
 		@throw [OFOutOfRangeException exception];
@@ -213,7 +229,11 @@ callMain(id object)
 #ifdef OF_HAVE_SCHED_YIELD
 	sched_yield();
 #else
+# ifdef OF_CMSIS
+	osThreadYield();
+# else
 	[self sleepForTimeInterval: 0];
+# endif
 #endif
 }
 

@@ -17,7 +17,7 @@
 #import "objfw-defs.h"
 
 #if !defined(OF_HAVE_THREADS) || \
-	(!defined(OF_HAVE_PTHREADS) && !defined(_WIN32))
+	(!defined(OF_HAVE_PTHREADS) && !defined(_WIN32) &&!defined(OF_CMSIS))
 # error No threads available!
 #endif
 
@@ -53,6 +53,26 @@ typedef struct {
 } of_condition_t;
 typedef volatile LONG of_once_t;
 # define OF_ONCE_INIT 0
+#elif defined(OF_CMSIS)
+# include <cmsis_os.h>
+typedef osThreadId of_thread_t;
+typedef uint32_t of_tlskey_t;
+typedef struct {
+	osMutexId mid;
+} of_mutex_t;
+typedef struct {
+	osMessageQId queue;
+} of_condition_t;
+typedef uint32_t of_once_t;
+# define OF_ONCE_INIT 0
+extern bool cmsis_tls_next_key(of_tlskey_t *key);
+extern bool cmsis_tls_free_key(of_tlskey_t key);
+extern void* cmsis_tls_get(of_tlskey_t key);
+extern bool cmsis_tls_set(of_tlskey_t key, void *value);
+#define MAX_ONCE 2
+#define MAX_KEYS_PER_TLS 10
+#define MAX_WAIT_PER_CV 10
+#define SIGNAL_CV 0x0001
 #else
 # error No threads available!
 #endif
@@ -91,14 +111,23 @@ typedef struct of_thread_attr_t {
 #elif defined(_WIN32)
 # define of_thread_is_current(t) (t == GetCurrentThread())
 # define of_thread_current GetCurrentThread
+#elif defined(OF_CMSIS)
+/* XXX: May not work other than RTX */
+# define of_thread_is_current(t) (t == osThreadGetId())
+# define of_thread_current osThreadGetId
 #else
 # error of_thread_is_current not implemented!
 # error of_thread_current not implemented!
 #endif
 
 extern bool of_thread_attr_init(of_thread_attr_t *attr);
+#ifdef OF_CMSIS
+extern bool of_thread_new(of_thread_t *thread, void (*function)(id), id data,
+    const of_thread_attr_t *attr);
+#else
 extern bool of_thread_new(of_thread_t *thread, id (*function)(id), id data,
     const of_thread_attr_t *attr);
+#endif
 extern void of_thread_set_name(of_thread_t thread, const char *name);
 extern bool of_thread_join(of_thread_t thread);
 extern bool of_thread_detach(of_thread_t thread);
@@ -131,6 +160,8 @@ of_tlskey_new(of_tlskey_t *key)
 	return !pthread_key_create(key, NULL);
 #elif defined(_WIN32)
 	return ((*key = TlsAlloc()) != TLS_OUT_OF_INDEXES);
+#elif defined(OF_CMSIS)
+	return cmsis_tls_next_key(key);
 #else
 # error of_tlskey_new not implemented!
 #endif
@@ -143,6 +174,8 @@ of_tlskey_get(of_tlskey_t key)
 	return pthread_getspecific(key);
 #elif defined(_WIN32)
 	return TlsGetValue(key);
+#elif defined(OF_CMSIS)
+	return cmsis_tls_get(key);
 #else
 # error of_tlskey_get not implemented!
 #endif
@@ -155,6 +188,8 @@ of_tlskey_set(of_tlskey_t key, void *ptr)
 	return !pthread_setspecific(key, ptr);
 #elif defined(_WIN32)
 	return TlsSetValue(key, ptr);
+#elif defined(OF_CMSIS)
+	return cmsis_tls_set(key, ptr);
 #else
 # error of_tlskey_set not implemented!
 #endif
@@ -167,6 +202,8 @@ of_tlskey_free(of_tlskey_t key)
 	return !pthread_key_delete(key);
 #elif defined(_WIN32)
 	return TlsFree(key);
+#elif defined(OF_CMSIS)
+	return cmsis_tls_free_key(key);
 #else
 # error of_tlskey_free not implemented!
 #endif
