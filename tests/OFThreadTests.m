@@ -49,7 +49,10 @@ static OFString *module = @"OFThread";
 
 	TEST(@"-[start]", R([t start]))
 
+/* join is not supported */
+#ifndef OF_CMSIS
 	TEST(@"-[join]", [[t join] isEqual: @"success"])
+#endif
 
 	TEST(@"-[threadDictionary]", (d = [OFThread threadDictionary]) &&
 	    [d objectForKey: @"foo"] == nil)
