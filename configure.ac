@@ -82,6 +82,24 @@ AS_IF([test x"$with_nds" = x"yes"], [
 	AC_SUBST(MAP_LDFLAGS, ['-Wl,-Map,$@.map'])
 ])
 
+AC_ARG_WITH(cm4f,
+	AS_HELP_STRING([--with-cm4f], [build for Bare-Metal ARM Cortex-M4F]))
+AS_IF([test x"$with_cm4f" = x"yes"], [
+
+	OBJCFLAGS="$OBJCFLAGS -mthumb -march=armv7e-m"
+	OBJCFLAGS="$OBJCFLAGS -mfloat-abi=softfp -mfpu=fpv4-sp-d16"
+	enable_shared="no"
+	enable_threads="no"	# TODO
+	enable_sockets="no"	# TODO
+	enable_files="no"	# TODO
+
+	AC_DEFINE(OF_CM4F, 1,
+		[Whether we are compiling for the Bare-Metal ARM Cortex-M4F])
+	AC_SUBST(LIBOBJFW_TESTS, "libobjfw-tests.a")
+], [
+	AC_SUBST(TESTS, "tests")
+])
+
 CPP="$OBJCPP"
 CPPFLAGS="$CPPFLAGS $OBJCPPFLAGS"
 OBJCFLAGS="$OBJCFLAGS -Wall -fexceptions -fobjc-exceptions -funwind-tables"
@@ -111,11 +129,14 @@ AX_CHECK_COMPILER_FLAGS(-Wsemicolon-before-method-body -Werror,
 AX_CHECK_COMPILER_FLAGS(-Wobjc-property-synthesis -Werror,
 	[OBJCFLAGS="$OBJCFLAGS -Wobjc-property-synthesis"])
 
-case "$OBJC" in
-	*clang*)
-		ASFLAGS="$ASFLAGS -no-integrated-as"
-		;;
-esac
+dnl We use clang integrated-as at CM4F build
+AS_IF([test x"$with_cm4f" != x"yes"], [
+	case "$OBJC" in
+		*clang*)
+			ASFLAGS="$ASFLAGS -no-integrated-as"
+			;;
+	esac
+])
 
 AC_MSG_CHECKING(whether Objective C compiler supports properties)
 AC_TRY_COMPILE([

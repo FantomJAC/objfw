@@ -2,12 +2,13 @@ include ../extra.mk
 
 SUBDIRS = ${TESTPLUGIN}
 
+STATIC_LIB = ${LIBOBJFW_TESTS}
 CLEAN = EBOOT.PBP		\
 	boot.dol		\
 	${PROG_NOINST}.arm9	\
 	${PROG_NOINST}.nds
 
-PROG_NOINST = tests${PROG_SUFFIX}
+PROG_NOINST = ${TESTS}${PROG_SUFFIX}
 SRCS = ForwardingTests.m		\
        OFArrayTests.m			\
        ${OFBLOCKTESTS_M}		\
