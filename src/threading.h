@@ -121,13 +121,8 @@ typedef struct of_thread_attr_t {
 #endif
 
 extern bool of_thread_attr_init(of_thread_attr_t *attr);
-#ifdef OF_CMSIS
-extern bool of_thread_new(of_thread_t *thread, void (*function)(id), id data,
+extern bool of_thread_new(of_thread_t *thread, void (*function)(id), id object,
     const of_thread_attr_t *attr);
-#else
-extern bool of_thread_new(of_thread_t *thread, id (*function)(id), id data,
-    const of_thread_attr_t *attr);
-#endif
 extern void of_thread_set_name(of_thread_t thread, const char *name);
 extern bool of_thread_join(of_thread_t thread);
 extern bool of_thread_detach(of_thread_t thread);

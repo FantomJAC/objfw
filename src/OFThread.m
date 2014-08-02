@@ -85,11 +85,7 @@
 static of_tlskey_t threadSelfKey;
 static OFThread *mainThread;
 
-# ifdef OF_CMSIS
 static void
-# else
-static id
-# endif
 callMain(id object)
 {
 	OFThread *thread = (OFThread*)object;
@@ -119,10 +115,6 @@ callMain(id object)
 	[OFAutoreleasePool OF_handleThreadTermination];
 
 	[thread release];
-
-# ifndef OF_CMSIS
-	return 0;
-# endif
 }
 #endif
 
