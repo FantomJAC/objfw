@@ -1,4 +1,4 @@
-ObjFW on Bare-Metal ARM (Cortex-M4F)
+ObjFW on Bare-Metal ARM (Cortex-M)
 ====================================
 This file contains instructions on how to get a working build environment to 
 compile ObjFW on Bare-Metal ARM.  
@@ -6,13 +6,15 @@ compile ObjFW on Bare-Metal ARM.
 Prerequisites
 -------------
 
-* Cortex-M4F hardware with external RAM  
-  **Cortex-M4 without FPU should be fine. Cortex-M3 is not tested yet.**
+* Cortex-M hardware with external RAM  
+* CMSIS-RTOS implementation (for the threading)  
+  **Only Keil RTX is supported so far.**
+  **To use the threading feature, you have to implement your own syscalls supports reentrancy and thread-safety.**
 * clang/llvm 3.5 (http://clang.llvm.org/get_started.html)  
   **You need 3.5 or later. Build from source is highly recommended.**
 * GNU Tools for ARM Embedded (https://launchpad.net/gcc-arm-embedded)
 
-***Tested environment is:***
+### Tested environment
 
 * Ubuntu 14.04 LTS
 * Silabs EFM32WG-DK3850
@@ -30,6 +32,7 @@ Make an symbolic link to make clang happy.
 Put these bash scripts into your GNU tools bin folder. (Don't add .sh extension, 
 and don't forget to chmod +x)
 
+---
 ***arm-none-eabi-clang***
 
 This script makes clang to do actual cross-compiling for Cortex-M.
@@ -40,6 +43,7 @@ This script makes clang to do actual cross-compiling for Cortex-M.
 -isysroot /path_to_toolchain $@
 ```
 
+---
 ***arm-none-eabi-gcc***
 
 For the script below, you first need to rename the original gcc.
@@ -73,7 +77,8 @@ Before you continue, make sure that /path_to_toolchain/bin was added to PATH.
 
     ./autogen.sh
     export LDFLAGS=--specs=rdimon.specs
-    ./configure --host=arm-none-eabi --with-cm4f
+    export CMSIS=/path_to_cmsis_dir
+    ./configure --host=arm-none-eabi --with-cmsis
     make
 
 To run the tests or your application, you need to perform linkage on your 
